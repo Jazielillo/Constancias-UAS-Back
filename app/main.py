@@ -90,8 +90,8 @@ def generar_qrcode(idqrcode: str) -> str:
 
 def encabezado_pie(canvas, doc):
     """Función para añadir encabezado y pie de página"""
-    ruta_encabezado = "./assets/cabecera.png"
-    ruta_pie = "./assets/pie.png"
+    ruta_encabezado = "../assets/cabecera.png"
+    ruta_pie = "../assets/pie.png"
     
     # Verificar si las imágenes existen
     if not os.path.exists(ruta_encabezado) or not os.path.exists(ruta_pie):
@@ -174,7 +174,7 @@ def generar_constancia(idqrcode: str, pseudonimo: str, grado: str, nombre: str, 
     )
     
     # Imagen de firma
-    ruta_firma = "./assets/firma.png"
+    ruta_firma = "../assets/firma.png"
     if os.path.exists(ruta_firma):
         firma = Image(ruta_firma)
         ancho_pagina, alto_pagina = letter

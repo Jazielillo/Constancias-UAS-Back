@@ -34,11 +34,13 @@ cd constancias-api
 pip install -r requirements.txt
 ```
 
-3. Coloca los archivos necesarios en el directorio raíz:
+3. Coloca los archivos necesarios en el directorio assets/:
 
    - `cabecera.png` - Imagen del encabezado
    - `pie.png` - Imagen del pie de página
    - `firma.png` - Imagen de la firma
+
+Ademas Crear carpetas "constancias/" y "qrs/" dentro de la carpeta app
 
 4. Ejecuta la aplicación:
 
@@ -85,6 +87,25 @@ Content-Type: application/json
   "idcategoria": "1.2.2.4",
   "asignatura": "Programación Web",
   "email": "juan.perez@uas.edu.mx"
+}
+
+
+ESTE ES EL BUENO
+{
+  "pseudonimo": "Dr",
+  "grado": "Licenciatura",
+  "nombre": "María Fernanda Luna Torres",
+  "area": "Ciencias Sociales",
+  "programa": "Licenciatura en Psicología",
+  "semestre": "5",
+  "ciclo_escolar": "2025-A",
+  "fecha_emision": "2025-07-15",
+  "idcategoria": "1.2.2.4",
+  "asignatura": "Psicología del Desarrollo",
+  "email": "mfernanda.luna@example.com",
+  "curso": "Introducción a la Psicología Infantil",
+  "instructor": "Dr. Javier Mendoza Ruiz",
+  "periodo": "Enero - Junio 2025"
 }
 ```
 
