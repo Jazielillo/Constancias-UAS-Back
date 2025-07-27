@@ -1,10 +1,20 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+python-multipart==0.0.6
+python-dotenv==1.0.0
+pydantic[email]==2.11.4
+alembic==1.13.0
+
+# Opcionales
 pandas==2.1.3
 reportlab==4.0.7
 qrcode[pil]==7.4.2
-python-dotenv==1.0.0
-python-multipart==0.0.6
-email-validator==2.1.0
 openpyxl==3.1.2
 Pillow==10.1.0
+
+# Para desarrollo/testing
+pytest==7.4.3
+httpx==0.25.2
+pytest-asyncio==0.21.1

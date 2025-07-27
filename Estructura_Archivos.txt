@@ -1,0 +1,23 @@
+project/
+├── main.py                 # Aplicación principal FastAPI
+├── config.py              # Configuración de la aplicación
+├── database.py            # Configuración de base de datos
+├── models.py              # Modelos SQLAlchemy (tu archivo existente)
+├── schemas.py             # Esquemas Pydantic (tu archivo existente)
+├── crud.py                # Operaciones CRUD
+├── pdf_generator.py       # Lógica de generación de PDFs
+├── requirements.txt       # Dependencias del proyecto
+├── .env                   # Variables de entorno
+├── routers/               # Módulo de rutas
+│   ├── __init__.py       # Inicialización del paquete
+│   ├── constancias.py    # Rutas relacionadas con constancias
+│   ├── utils.py          # Rutas de utilidades (QR, categorías)
+│   ├── admin.py          # Rutas administrativas
+│   └── users.py          # Rutas de usuarios
+├── assets/               # Archivos estáticos
+│   ├── cabecera.png     # Imagen del encabezado
+│   ├── pie.png          # Imagen del pie de página
+│   └── firma.png        # Imagen de la firma
+├── constancias/         # Archivos PDF generados
+├── qrs/                 # Códigos QR generados
+└── uploads/             # Archivos subidos
