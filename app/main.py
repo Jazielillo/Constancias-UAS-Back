@@ -10,6 +10,12 @@ from datetime import datetime
 import tempfile
 import shutil
 
+#CONECTAR DATABASE Y CREAR TABLAS AUTOMATICAMENTE
+from models import models
+from database.database import engine
+#CONECTAR DATABASE Y CREAR TABLAS AUTOMATICAMENTE
+
+
 # Importar las funciones del código original
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageTemplate, BaseDocTemplate
@@ -43,6 +49,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+#CREAR TABLAS EN LA BASE DE DATOS#
+models.Base.metadata.create_all(bind=engine)
+#CREAR TABLAS EN LA BASE DE DATOS#
+
 
 # Modelos Pydantic
 class ConstanciaIndividual(BaseModel):
@@ -428,4 +439,5 @@ async def eliminar_constancia(qr_id: str):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
