@@ -1,15 +1,28 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
+from dotenv import load_dotenv
 
-# Tu URL de conexión de Neon
-SQLALCHEMY_DATABASE_URL = "postgresql://neondb_owner:npg_no19BxDCKMAr@ep-restless-field-af8c9iq1-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+# Cargar variables de entorno
+load_dotenv()
 
-# Crea el engine de SQLAlchemy
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Obtener la URL de la base de datos SIN comillas en .env
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Crea una sesión local
+# Crear engine (sin connect_args porque no es SQLite)
+engine = create_engine(DATABASE_URL)
+
+# Crear SessionLocal
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base para heredar tus modelos
+# Base para modelos ORM
 Base = declarative_base()
+
+# Dependency para obtener la sesión de base de datos (FastAPI lo usará con Depends)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

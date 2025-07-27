@@ -2,3 +2,5 @@ constancias/
 qrs/
 uploads/
 __pycache__
+*.pyc
+.env
