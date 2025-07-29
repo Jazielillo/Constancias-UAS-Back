@@ -10,9 +10,10 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(BigInteger, primary_key=True, index=True)
+    sub = Column(String(255), unique=True, index=True, nullable=False)  # Google sub ID
     nombre = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
-    genero = Column(String(20), nullable=True)
+    genero = Column(String(20), nullable=True, default=None)  # Nullable por defecto
     grado_academico = Column(String(100), nullable=True)
     admin = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -21,6 +22,7 @@ class User(Base):
     # Relaciones
     solicitudes = relationship("Solicitud", back_populates="usuario")
 
+    
 class Programa(Base):
     __tablename__ = "programas"
     

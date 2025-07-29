@@ -23,6 +23,11 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime, date
 
+
+class CredentialRequest(BaseModel):
+    credential: str
+
+    
 # Esquemas para Constancias
 class ConstanciaIndividual(BaseModel):
     pseudonimo: str

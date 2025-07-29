@@ -9,6 +9,10 @@ from schemas.schemas import (
 
 router = APIRouter()
 
+@router.get("/prueba")
+async def prueba():
+    return {"message": "¡Esta es una prueba desde FastAPI SALUDEEEN!"}
+
 # ENDPOINTS PARA USUARIOS
 @router.get("/usuarios", response_model=List[User])
 async def listar_usuarios(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):

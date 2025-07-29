@@ -8,6 +8,7 @@ from models import models
 from database.database import engine
 from config.config import settings
 from pdf_generator import PDFGenerator
+from endpoints.auth import router as auth_router
 from endpoints.categorias import router as categorias_router
 from endpoints.constancias import router as constancias_router
 from endpoints.periodos import router as periodos_router
@@ -40,12 +41,13 @@ app.add_middleware(
 models.Base.metadata.create_all(bind=engine)
 
 # Incluir routers
-app.include_router(categorias_router, prefix="/api/v1", tags=["categorias"])
-app.include_router(constancias_router, prefix="/api/v1", tags=["constancias"])
-app.include_router(periodos_router, prefix="/api/v1", tags=["periodos"])
-app.include_router(programas_router, prefix="/api/v1", tags=["programas"])
-app.include_router(solicitudes_router, prefix="/api/v1", tags=["solicitudes"])
-app.include_router(usuarios_router, prefix="/api/v1", tags=["usuarios"])
+app.include_router(auth_router, tags=["auth"])
+app.include_router(categorias_router, tags=["categorias"])
+app.include_router(constancias_router, tags=["constancias"])
+app.include_router(periodos_router, tags=["periodos"])
+app.include_router(programas_router, tags=["programas"])
+app.include_router(solicitudes_router, tags=["solicitudes"])
+app.include_router(usuarios_router, tags=["usuarios"])
 
 @app.get("/")
 async def root():
