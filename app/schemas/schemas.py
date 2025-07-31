@@ -1,5 +1,3 @@
-
-
 # # Enums para estados
 # class EstadoSolicitud(str, Enum):
 #     PENDIENTE = "pendiente"
@@ -129,10 +127,11 @@ class Categoria(CategoriaBase):
     class Config:
         from_attributes = True
 
-# Esquemas para Período
+# Esquemas para Período (ahora Ediciones)
 class PeriodoBase(BaseModel):
     nombre: str
-    semestre: str
+    periodo1: str  # Cambio: era semestre
+    periodo2: str  # Nuevo campo
     fecha_inicio: date
     fecha_fin: date
     estado: str = "programado"
@@ -142,7 +141,8 @@ class PeriodoCreate(PeriodoBase):
 
 class PeriodoUpdate(BaseModel):
     nombre: Optional[str] = None
-    semestre: Optional[str] = None
+    periodo1: Optional[str] = None  # Cambio: era semestre
+    periodo2: Optional[str] = None  # Nuevo campo
     fecha_inicio: Optional[date] = None
     fecha_fin: Optional[date] = None
     estado: Optional[str] = None
@@ -159,7 +159,7 @@ class Periodo(PeriodoBase):
 class SolicitudBase(BaseModel):
     programa_id: int
     categoria_id: int
-    periodo_id: int
+    periodo: str  # Cambio: era periodo_id (int), ahora es periodo (str)
     asignatura: str
     fecha_solicitud: date
     observaciones: Optional[str] = None
@@ -170,7 +170,7 @@ class SolicitudCreate(SolicitudBase):
 class SolicitudUpdate(BaseModel):
     programa_id: Optional[int] = None
     categoria_id: Optional[int] = None
-    periodo_id: Optional[int] = None
+    periodo: Optional[str] = None  # Cambio: era periodo_id
     asignatura: Optional[str] = None
     fecha_solicitud: Optional[date] = None
     estado: Optional[str] = None
@@ -185,11 +185,11 @@ class Solicitud(SolicitudBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     
-    # Relaciones
+    # Relaciones actualizadas
     usuario: Optional[User] = None
     programa: Optional[Programa] = None
     categoria: Optional[Categoria] = None
-    periodo: Optional[Periodo] = None
+    # Ya no hay relación con periodo (era objeto Periodo, ahora es string)
     
     class Config:
         from_attributes = True
