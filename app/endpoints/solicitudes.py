@@ -1,14 +1,102 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List
+import re
+from datetime import date
 from database.database import get_db
 from models import models
 from schemas.schemas import (
-    Solicitud, SolicitudCreate, SolicitudUpdate
+    Solicitud, SolicitudCreate, SolicitudUpdate, SolicitudFormulario,
+    CamposDinamicos, Categoria
 )
 
 router = APIRouter()
 
+def extraer_campos_de_plantilla(descripcion: str) -> List[str]:
+    """
+    Extrae los campos dinámicos de una descripción con formato {campo}
+    Ejemplo: "Constancia para {grado} {nombre}" -> ["grado", "nombre"]
+    """
+    if not descripcion:
+        return []
+    
+    # Buscar todos los patrones {campo}
+    patron = r'\{([^}]+)\}'
+    campos = re.findall(patron, descripcion)
+    return campos
+
+def reemplazar_campos_en_plantilla(plantilla: str, datos: dict) -> str:
+    """
+    Reemplaza los campos {campo} en la plantilla con los valores del diccionario
+    """
+    if not plantilla:
+        return ""
+    
+    descripcion_final = plantilla
+    for campo, valor in datos.items():
+        descripcion_final = descripcion_final.replace(f"{{{campo}}}", str(valor))
+    
+    return descripcion_final
+
+# # ENDPOINTS PARA USUARIOS
+# @router.get("/usuarios/{user_id}")
+# async def obtener_usuario(user_id: int, db: Session = Depends(get_db)):
+#     """Obtener datos del usuario logueado"""
+#     usuario = db.query(models.User).filter(models.User.id == user_id).first()
+#     if usuario is None:
+#         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+#     return {
+#         "id": usuario.id,
+#         "nombre": usuario.nombre,
+#         "email": usuario.email,
+#         "genero": usuario.genero,
+#         "grado_academico": usuario.grado_academico
+#     }
+
+# # ENDPOINTS PARA CATEGORÍAS (necesarios para obtener las plantillas)
+# @router.get("/categorias", response_model=List[Categoria])
+# async def listar_categorias(db: Session = Depends(get_db)):
+#     """Listar todas las categorías activas"""
+#     categorias = db.query(models.Categoria).filter(models.Categoria.activo == True).all()
+#     return categorias
+
+# @router.get("/categorias/{categoria_id}/campos-dinamicos", response_model=CamposDinamicos)
+# async def obtener_campos_dinamicos(categoria_id: int, db: Session = Depends(get_db)):
+#     """
+#     Obtiene los campos dinámicos de una categoría basados en su descripción
+#     """
+#     categoria = db.query(models.Categoria).filter(models.Categoria.id == categoria_id).first()
+#     if categoria is None:
+#         raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    
+#     campos = extraer_campos_de_plantilla(categoria.descripcion)
+    
+#     return CamposDinamicos(
+#         categoria_id=categoria_id,
+#         campos=campos,
+#         plantilla=categoria.descripcion or ""
+#     )
+
+# # ENDPOINTS PARA EDICIONES
+# @router.get("/ediciones", response_model=List[dict])
+# async def listar_ediciones(db: Session = Depends(get_db)):
+#     """Listar todas las ediciones activas"""
+#     ediciones = db.query(models.Edicion).filter(models.Edicion.estado.in_(["programado", "activo"])).all()
+    
+#     # Formatear la respuesta para incluir los períodos
+#     resultado = []
+#     for edicion in ediciones:
+#         resultado.append({
+#             "id": edicion.id,
+#             "nombre": edicion.nombre,
+#             "periodos": [edicion.periodo1, edicion.periodo2],
+#             "fecha_inicio": edicion.fecha_inicio,
+#             "fecha_fin": edicion.fecha_fin,
+#             "estado": edicion.estado
+#         })
+    
+#     return resultado
 
 # ENDPOINTS PARA SOLICITUDES
 @router.get("/solicitudes", response_model=List[Solicitud])
@@ -17,10 +105,74 @@ async def listar_solicitudes(skip: int = 0, limit: int = 100, db: Session = Depe
     solicitudes = db.query(models.Solicitud).offset(skip).limit(limit).all()
     return solicitudes
 
+@router.post("/solicitudes/formulario")
+async def crear_solicitud_desde_formulario(solicitud_form: SolicitudFormulario, db: Session = Depends(get_db)):
+    """
+    Crear una nueva solicitud procesando la plantilla de la categoría
+    """
+    # Obtener la categoría para acceder a la plantilla
+    categoria = db.query(models.Categoria).filter(models.Categoria.id == solicitud_form.categoria_id).first()
+    if categoria is None:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    
+    # Verificar que la edición existe
+    edicion = db.query(models.Edicion).filter(models.Edicion.id == solicitud_form.edicion_id).first()
+    if edicion is None:
+        raise HTTPException(status_code=404, detail="Edición no encontrada")
+    
+    # Verificar que el período es válido para la edición
+    if solicitud_form.periodo not in [edicion.periodo1, edicion.periodo2]:
+        raise HTTPException(status_code=400, detail="Período no válido para la edición seleccionada")
+    
+    # Procesar la plantilla
+    descripcion_final = reemplazar_campos_en_plantilla(
+        categoria.descripcion or "", 
+        solicitud_form.datos_dinamicos
+    )
+    
+    # Crear la solicitud
+    db_solicitud = models.Solicitud(
+        user_id=solicitud_form.datos_dinamicos.get("user_id"),  # Asumiendo que viene en los datos
+        categoria_id=solicitud_form.categoria_id,
+        edicion_id=solicitud_form.edicion_id,
+        periodo=solicitud_form.periodo,
+        descripcion=descripcion_final,
+        fecha_solicitud=date.today(),
+        estado="pendiente"
+    )
+    
+    db.add(db_solicitud)
+    db.commit()
+    db.refresh(db_solicitud)
+    
+    return {
+        "mensaje": "Solicitud creada exitosamente",
+        "solicitud_id": db_solicitud.id,
+        "descripcion_generada": descripcion_final
+    }
+
 @router.post("/solicitudes", response_model=Solicitud)
 async def crear_solicitud(solicitud: SolicitudCreate, db: Session = Depends(get_db)):
-    """Crear una nueva solicitud"""
-    db_solicitud = models.Solicitud(**solicitud.dict())
+    """Crear una nueva solicitud (método tradicional)"""
+    solicitud_data = solicitud.dict()
+    
+    # Si viene con datos_formulario, procesar la plantilla
+    if solicitud_data.get("datos_formulario"):
+        categoria = db.query(models.Categoria).filter(
+            models.Categoria.id == solicitud_data["categoria_id"]
+        ).first()
+        
+        if categoria and categoria.descripcion:
+            descripcion_final = reemplazar_campos_en_plantilla(
+                categoria.descripcion,
+                solicitud_data["datos_formulario"]
+            )
+            solicitud_data["descripcion"] = descripcion_final
+        
+        # Remover datos_formulario antes de crear el modelo
+        del solicitud_data["datos_formulario"]
+    
+    db_solicitud = models.Solicitud(**solicitud_data)
     db.add(db_solicitud)
     db.commit()
     db.refresh(db_solicitud)

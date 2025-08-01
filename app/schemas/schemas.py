@@ -107,6 +107,7 @@ class Programa(ProgramaBase):
 class CategoriaBase(BaseModel):
     codigo_categoria: str
     nombre: str
+    asunto: str
     descripcion: Optional[str] = None
     activo: bool = True
 
@@ -116,6 +117,7 @@ class CategoriaCreate(CategoriaBase):
 class CategoriaUpdate(BaseModel):
     codigo_categoria: Optional[str] = None
     nombre: Optional[str] = None
+    asunto: Optional[str] = None
     descripcion: Optional[str] = None
     activo: Optional[bool] = None
 
@@ -193,3 +195,80 @@ class Solicitud(SolicitudBase):
     
     class Config:
         from_attributes = True
+
+
+class EdicionBase(BaseModel):
+    nombre: str
+    periodo1: str
+    periodo2: str
+    fecha_inicio: date
+    fecha_fin: date
+    estado: str = "programado"
+
+class EdicionCreate(EdicionBase):
+    pass
+
+class EdicionUpdate(BaseModel):
+    nombre: Optional[str] = None
+    periodo1: Optional[str] = None
+    periodo2: Optional[str] = None
+    fecha_inicio: Optional[date] = None
+    fecha_fin: Optional[date] = None
+    estado: Optional[str] = None
+
+class Edicion(EdicionBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+# Esquemas para Solicitud
+class SolicitudBase(BaseModel):
+    categoria_id: int
+    edicion_id: int
+    periodo: str
+    descripcion: Optional[str] = None
+    fecha_solicitud: date
+
+class SolicitudCreate(SolicitudBase):
+    user_id: int
+    # Campos adicionales para procesar la plantilla
+    datos_formulario: Optional[dict] = None
+
+class SolicitudUpdate(BaseModel):
+    categoria_id: Optional[int] = None
+    edicion_id: Optional[int] = None
+    periodo: Optional[str] = None
+    descripcion: Optional[str] = None
+    fecha_solicitud: Optional[date] = None
+    estado: Optional[str] = None
+
+class Solicitud(SolicitudBase):
+    id: int
+    user_id: int
+    estado: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    # Relaciones
+    usuario: Optional[User] = None
+    categoria: Optional[Categoria] = None
+    edicion: Optional[Edicion] = None
+    
+    class Config:
+        from_attributes = True
+
+# Esquema específico para el formulario de solicitud
+class SolicitudFormulario(BaseModel):
+    categoria_id: int
+    edicion_id: int
+    periodo: str
+    datos_dinamicos: dict  # Aquí van los valores para reemplazar en la plantilla
+
+# Esquema para obtener campos dinámicos de una categoría
+class CamposDinamicos(BaseModel):
+    categoria_id: int
+    campos: List[str]  # Lista de campos extraídos de la descripción
+    plantilla: str     # La descripción original con los marcadores

@@ -22,17 +22,17 @@ class User(Base):
     solicitudes = relationship("Solicitud", back_populates="usuario")
 
     
-class Programa(Base):
-    __tablename__ = "programas"
+# class Programa(Base):
+#     __tablename__ = "programas"
     
-    id = Column(BigInteger, primary_key=True, index=True)
-    nombre = Column(String(255), nullable=False)
-    codigo = Column(String(50), unique=True, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+#     id = Column(BigInteger, primary_key=True, index=True)
+#     nombre = Column(String(255), nullable=False)
+#     codigo = Column(String(50), unique=True, nullable=False)
+#     created_at = Column(DateTime(timezone=True), server_default=func.now())
+#     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # Relaciones
-    solicitudes = relationship("Solicitud", back_populates="programa")
+#     # Relaciones
+#     solicitudes = relationship("Solicitud", back_populates="programa")
 
 class Categoria(Base):
     __tablename__ = "categorias"
@@ -40,6 +40,7 @@ class Categoria(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     codigo_categoria = Column(String(20), unique=True, nullable=False)
     nombre = Column(String(255), nullable=False)
+    asunto = Column(String(255), nullable=False)
     descripcion = Column(Text, nullable=True)
     activo = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -53,13 +54,16 @@ class Edicion(Base):
     
     id = Column(BigInteger, primary_key=True, index=True)
     nombre = Column(String(255), nullable=False)
-    periodo1 = Column(String(20), nullable=False)  # Nuevo campo
-    periodo2 = Column(String(20), nullable=False)  # Nuevo campo
+    periodo1 = Column(String(20), nullable=False)  
+    periodo2 = Column(String(20), nullable=False)  
     fecha_inicio = Column(Date, nullable=False)
     fecha_fin = Column(Date, nullable=False)
-    estado = Column(String(20), default="programado")  # programado, activo, finalizado, borrador
+    estado = Column(String(20), default="programado")  
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Agregar esta relación
+    solicitudes = relationship("Solicitud", back_populates="edicion")
     
 
 class Solicitud(Base):
@@ -67,18 +71,16 @@ class Solicitud(Base):
     
     id = Column(BigInteger, primary_key=True, index=True)
     user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
-    programa_id = Column(BigInteger, ForeignKey("programas.id"), nullable=False)
     categoria_id = Column(BigInteger, ForeignKey("categorias.id"), nullable=False)
-    periodo = Column(String(20), nullable=False)  # Cambiado de periodo_id a periodo (String)
-    asignatura = Column(String(255), nullable=False)
+    edicion_id = Column(BigInteger, ForeignKey("ediciones.id"), nullable=False)
+    periodo = Column(String(20), nullable=False)
+    descripcion = Column(Text, nullable=True) 
     fecha_solicitud = Column(Date, nullable=False)
-    estado = Column(String(20), default="pendiente")  # pendiente, aceptado, rechazado
-    observaciones = Column(Text, nullable=True)
-    fecha_procesado = Column(DateTime(timezone=True), nullable=True)
+    estado = Column(String(20), default="pendiente")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # Relaciones actualizadas
+    # Relaciones
     usuario = relationship("User", back_populates="solicitudes")
-    programa = relationship("Programa", back_populates="solicitudes")
     categoria = relationship("Categoria", back_populates="solicitudes")
+    edicion = relationship("Edicion", back_populates="solicitudes")  # Esta línea ya la tienes
