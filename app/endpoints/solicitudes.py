@@ -99,6 +99,22 @@ def reemplazar_campos_en_plantilla(plantilla: str, datos: dict) -> str:
 #     return resultado
 
 # ENDPOINTS PARA SOLICITUDES
+@router.get("/usuarios/{user_id}")
+async def obtener_usuario(user_id: int, db: Session = Depends(get_db)):
+    """Obtener datos del usuario logueado"""
+    usuario = db.query(models.User).filter(models.User.id == user_id).first()
+    if usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return {
+        "id": usuario.id,
+        "nombre": usuario.nombre,
+        "email": usuario.email,
+        "genero": usuario.genero,
+        "grado_academico": usuario.grado_academico
+    }
+
+
 @router.get("/solicitudes", response_model=List[Solicitud])
 async def listar_solicitudes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Listar todas las solicitudes"""

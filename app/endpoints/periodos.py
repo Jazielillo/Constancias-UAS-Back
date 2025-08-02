@@ -89,6 +89,72 @@ async def get_admin_user(current_user: Dict = Depends(get_current_user)) -> Dict
 
 # ENDPOINTS PARA PERÍODOS (ahora usando la tabla Ediciones)
 
+@router.get("/periodos/edicion-actual")
+async def obtener_edicion_actual(db: Session = Depends(get_db)):
+    """
+    Obtener la edición que está actualmente en curso (dentro del rango de fechas)
+    - Endpoint público, no requiere autenticación
+    """
+    try:
+        from datetime import date
+        
+        hoy = date.today()
+        print(f"[DEBUG] Fecha actual: {hoy}")
+        
+        # Buscar la edición que esté dentro del rango de fechas actual
+        edicion_actual = db.query(models.Edicion).filter(
+            models.Edicion.fecha_inicio <= hoy,
+            models.Edicion.fecha_fin >= hoy
+        ).first()
+        
+        print(f"[DEBUG] Edición encontrada: {edicion_actual}")
+        
+        if edicion_actual is None:
+            # Si no hay edición activa, buscar la más reciente
+            edicion_actual = db.query(models.Edicion).order_by(
+                models.Edicion.fecha_inicio.desc()
+            ).first()
+            
+            if edicion_actual is None:
+                raise HTTPException(
+                    status_code=404, 
+                    detail="No hay ninguna edición disponible en el sistema"
+                )
+        
+        # Calcular el estado si es necesario
+        try:
+            estado_actual = calcular_estado_periodo(edicion_actual.fecha_inicio, edicion_actual.fecha_fin)
+            if edicion_actual.estado != estado_actual:
+                edicion_actual.estado = estado_actual
+                db.commit()
+                db.refresh(edicion_actual)
+        except Exception as e:
+            print(f"[WARNING] Error al calcular estado: {e}")
+            # Continuar con el estado actual en la BD
+        
+        # IMPORTANTE: Convertir fechas a string para evitar problemas de serialización
+        return {
+            "id": edicion_actual.id,
+            "nombre": edicion_actual.nombre,
+            "periodo1": edicion_actual.periodo1,
+            "periodo2": edicion_actual.periodo2,
+            "estado": edicion_actual.estado,
+            "fecha_inicio": str(edicion_actual.fecha_inicio) if edicion_actual.fecha_inicio else None,
+            "fecha_fin": str(edicion_actual.fecha_fin) if edicion_actual.fecha_fin else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] Error en obtener_edicion_actual: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error interno del servidor: {str(e)}"
+        )
+    
+
 # ENDPOINTS DE LECTURA - Para usuarios autenticados
 @router.get("/periodos", response_model=List[Periodo])
 async def listar_periodos(
