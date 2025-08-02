@@ -326,3 +326,5 @@ async def listar_solicitudes_usuario(user_id: int, db: Session = Depends(get_db)
         })
     
     return resultado
+
+

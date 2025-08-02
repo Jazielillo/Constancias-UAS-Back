@@ -18,3 +18,8 @@ Pillow==10.1.0
 pytest==7.4.3
 httpx==0.25.2
 pytest-asyncio==0.21.1
+
+
+
+PyMuPDF>=1.23.0  # Para fitz, conversión PDF a imagen
+Pillow>=10.0.0   # Para manipulación de imágenes

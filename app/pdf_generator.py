@@ -151,7 +151,87 @@ class PDFGenerator:
             "ASUNTO: \nInformación incorrecta.",
             "Información incorrecta"
         ))
-    
+
+    def generar_constancia_simplificada(self, idqrcode: str, archivo_pdf: str,
+                                    texto_aqc: str, texto_remitente: str, texto_apeticion: str,
+                                    texto_atte: str, texto_sursum: str, texto_nombrefirma: str,
+                                    texto_cargo: str, texto_msgdigital: str, texto_ccp: str,
+                                    pseudonimo: str, grado: str, nombre: str, 
+                                    texto_asunto: str, texto_consta: str, fecha_emision: str) -> str:
+        """Generar PDF de constancia con datos simplificados"""
+        
+        doc = BaseDocTemplate(archivo_pdf, pagesize=letter, topMargin=130)
+        ruta_qrcode = f"{settings.QR_DIR}/{idqrcode}.png"
+        
+        # Verificar si existe el QR code
+        if os.path.exists(ruta_qrcode):
+            imagen_qrcode = Image(ruta_qrcode)
+            imagen_qrcode._restrictSize(0.7 * 72, 0.7 * 72)
+        else:
+            imagen_qrcode = None
+        
+        frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='normal')
+        template = PageTemplate(id='test', frames=frame, onPage=self._encabezado_pie)
+        doc.addPageTemplates([template])
+        
+        story = []
+        
+        # Imagen de firma
+        if os.path.exists(settings.SIGNATURE_IMAGE):
+            firma = Image(settings.SIGNATURE_IMAGE)
+            ancho_pagina, alto_pagina = letter
+            ancho_imagen, alto_imagen = firma.imageWidth, firma.imageHeight
+            proporcion = ancho_imagen / alto_imagen
+            ancho_imagen_deseado = 1.5 * inch
+            alto_imagen_deseado = ancho_imagen_deseado / proporcion
+            
+            firma.drawHeight = alto_imagen_deseado
+            firma.drawWidth = ancho_imagen_deseado
+            firma.hAlign = 'CENTER'
+        else:
+            firma = None
+        
+        # Construir textos dinámicos
+        texto_remitente_completo = f"{texto_remitente} {pseudonimo} "
+        texto_persona = f"{grado} {nombre}"
+        texto_apeticion_completo = f"A petición de la parte interesada se extiende la presente, para los fines que juzgue convenientes, a los {fecha_emision}, en la ciudad de Los Mochis, Sinaloa."
+        
+        # Construir el documento
+        story.append(Paragraph(texto_asunto, self.estiloDerecha))
+        story.append(Spacer(1, 25))
+        story.append(Paragraph(texto_aqc, self.estiloNegrita))
+        story.append(Spacer(1, 25))
+        story.append(Paragraph(texto_remitente_completo, self.estilo_justificado))
+        story.append(Spacer(1, 25))
+        story.append(Paragraph(texto_persona, self.estiloNegritaCentrado))
+        story.append(Spacer(1, 25))
+        story.append(Paragraph(texto_consta, self.estilo_justificado))
+        story.append(Spacer(1, 25))
+        story.append(Paragraph(texto_apeticion_completo, self.estilo_justificado))
+        story.append(Spacer(1, 40))
+        story.append(Paragraph(texto_atte, self.estiloNegritaCentrado))
+        story.append(Paragraph(f'"{texto_sursum}"', self.estiloNegritaCentrado))
+        story.append(Spacer(1, 5))
+        
+        if firma:
+            story.append(firma)
+        
+        story.append(Spacer(1, -15))
+        story.append(Paragraph(texto_nombrefirma, self.estiloNegritaCentrado))
+        story.append(Paragraph(texto_cargo, self.estiloNegritaCentrado))
+        story.append(Spacer(1, 20))
+        
+        if imagen_qrcode:
+            story.append(imagen_qrcode)
+        
+        story.append(Paragraph(texto_msgdigital, self.estiloCentrado))
+        story.append(Spacer(1, 14))
+        story.append(Paragraph(texto_ccp, self.estilo_justificado))
+        
+        doc.build(story)
+        return archivo_pdf
+
+
     def generar_constancia(self, idqrcode: str, pseudonimo: str, grado: str, nombre: str, 
                           area: str, programa: str, semestre: str, ciclo_escolar: str, 
                           fecha_emision: str, archivo_pdf: str, idcategoria: str, 
@@ -242,3 +322,5 @@ class PDFGenerator:
         
         doc.build(story)
         return archivo_pdf
+    
+    
