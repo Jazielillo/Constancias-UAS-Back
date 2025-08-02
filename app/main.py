@@ -15,6 +15,7 @@ from endpoints.periodos import router as periodos_router
 from endpoints.programas import router as programas_router
 from endpoints.solicitudes import router as solicitudes_router
 from endpoints.usuarios import router as usuarios_router
+from endpoints.datos_fijos import router as datos_fijos_router
 
 
 # Crear directorios necesarios
@@ -48,6 +49,7 @@ app.include_router(periodos_router, tags=["periodos"])
 app.include_router(programas_router, tags=["programas"])
 app.include_router(solicitudes_router, tags=["solicitudes"])
 app.include_router(usuarios_router, tags=["usuarios"])
+app.include_router(datos_fijos_router, tags=["datos_fijos"])
 
 @app.get("/")
 async def root():

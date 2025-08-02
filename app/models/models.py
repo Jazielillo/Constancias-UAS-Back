@@ -70,6 +70,7 @@ class Solicitud(Base):
     __tablename__ = "solicitudes"
     
     id = Column(BigInteger, primary_key=True, index=True)
+    grado_academico = Column(String(100), nullable=False)
     user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     categoria_id = Column(BigInteger, ForeignKey("categorias.id"), nullable=False)
     edicion_id = Column(BigInteger, ForeignKey("ediciones.id"), nullable=False)
@@ -84,3 +85,20 @@ class Solicitud(Base):
     usuario = relationship("User", back_populates="solicitudes")
     categoria = relationship("Categoria", back_populates="solicitudes")
     edicion = relationship("Edicion", back_populates="solicitudes")  # Esta línea ya la tienes
+
+
+class DatosFijos(Base):
+    __tablename__ = "datos_fijos"
+    
+    id = Column(BigInteger, primary_key=True, index=True)
+    texto_aqc = Column(Text, nullable=True)
+    texto_remitente = Column(Text, nullable=True)
+    texto_apeticion = Column(Text, nullable=True)
+    texto_atte = Column(Text, nullable=True)
+    texto_sursum = Column(Text, nullable=True)
+    texto_nombrefirma = Column(String(255), nullable=True)
+    texto_cargo = Column(String(255), nullable=True)
+    texto_msgdigital = Column(Text, nullable=True)
+    texto_ccp = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

@@ -272,3 +272,39 @@ class CamposDinamicos(BaseModel):
     categoria_id: int
     campos: List[str]  # Lista de campos extraídos de la descripción
     plantilla: str     # La descripción original con los marcadores
+
+
+
+
+
+
+
+
+
+
+
+##DATOS FIJOS
+class DatosFijosBase(BaseModel):
+    texto_aqc: Optional[str] = None
+    texto_remitente: Optional[str] = None
+    texto_apeticion: Optional[str] = None
+    texto_atte: Optional[str] = None
+    texto_sursum: Optional[str] = None
+    texto_nombrefirma: Optional[str] = None
+    texto_cargo: Optional[str] = None
+    texto_msgdigital: Optional[str] = None
+    texto_ccp: Optional[str] = None
+
+class DatosFijosUpdate(DatosFijosBase):
+    pass
+
+class DatosFijos(DatosFijosBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+
+##DATOS FIJOS

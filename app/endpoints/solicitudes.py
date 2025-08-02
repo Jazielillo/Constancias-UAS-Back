@@ -115,11 +115,76 @@ async def obtener_usuario(user_id: int, db: Session = Depends(get_db)):
     }
 
 
-@router.get("/solicitudes", response_model=List[Solicitud])
+# @router.get("/solicitudes", response_model=List[Solicitud])
+# async def listar_solicitudes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     """Listar todas las solicitudes"""
+#     solicitudes = db.query(models.Solicitud).offset(skip).limit(limit).all()
+#     return solicitudes
+
+def formatear_grado_academico(grado: str) -> str:
+    """
+    Formatea el grado académico:
+    - Primera letra mayúscula, resto minúsculas
+    - Agrega punto al final si no lo tiene
+    """
+    if not grado:
+        return grado
+    
+    # Limpiar espacios extra
+    grado = grado.strip()
+    
+    # Convertir primera letra a mayúscula y resto a minúsculas
+    grado_formateado = grado.capitalize()
+    
+    # Agregar punto al final si no lo tiene
+    if not grado_formateado.endswith('.'):
+        grado_formateado += '.'
+    
+    return grado_formateado
+
+@router.get("/solicitudes")
 async def listar_solicitudes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Listar todas las solicitudes"""
-    solicitudes = db.query(models.Solicitud).offset(skip).limit(limit).all()
-    return solicitudes
+    """Listar todas las solicitudes con datos relacionados"""
+    solicitudes = db.query(models.Solicitud)\
+        .join(models.User)\
+        .join(models.Categoria)\
+        .join(models.Edicion)\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
+    
+    # Formatear la respuesta para incluir los datos relacionados
+    resultado = []
+    for solicitud in solicitudes:
+        resultado.append({
+            "id": solicitud.id,
+            "user_id": solicitud.user_id,
+            "categoria_id": solicitud.categoria_id,
+            "edicion_id": solicitud.edicion_id,
+            "periodo": solicitud.periodo,
+            "grado_academico": solicitud.grado_academico,
+            "descripcion": solicitud.descripcion,
+            "fecha_solicitud": solicitud.fecha_solicitud,
+            "estado": solicitud.estado,
+            "created_at": solicitud.created_at,
+            "updated_at": solicitud.updated_at,
+            # Datos relacionados
+            "usuario": {
+                "nombre": solicitud.usuario.nombre,
+                "email": solicitud.usuario.email,
+                "genero": solicitud.usuario.genero,
+                "grado_academico": solicitud.usuario.grado_academico
+            },
+            "categoria": {
+                "codigo_categoria": solicitud.categoria.codigo_categoria,
+                "nombre": solicitud.categoria.nombre
+            },
+            "edicion": {
+                "nombre": solicitud.edicion.nombre
+            }
+        })
+    
+    return resultado
 
 @router.post("/solicitudes/formulario")
 async def crear_solicitud_desde_formulario(solicitud_form: SolicitudFormulario, db: Session = Depends(get_db)):
@@ -148,10 +213,11 @@ async def crear_solicitud_desde_formulario(solicitud_form: SolicitudFormulario, 
     
     # Crear la solicitud
     db_solicitud = models.Solicitud(
-        user_id=solicitud_form.datos_dinamicos.get("user_id"),  # Asumiendo que viene en los datos
+        user_id=solicitud_form.datos_dinamicos.get("user_id"),
         categoria_id=solicitud_form.categoria_id,
         edicion_id=solicitud_form.edicion_id,
         periodo=solicitud_form.periodo,
+        grado_academico=formatear_grado_academico(solicitud_form.datos_dinamicos.get("grado", "")),
         descripcion=descripcion_final,
         fecha_solicitud=date.today(),
         estado="pendiente"
@@ -226,3 +292,37 @@ async def eliminar_solicitud(solicitud_id: int, db: Session = Depends(get_db)):
     db.delete(db_solicitud)
     db.commit()
     return {"mensaje": "Solicitud eliminada exitosamente"}
+
+@router.get("/usuarios/{user_id}/solicitudes")
+async def listar_solicitudes_usuario(user_id: int, db: Session = Depends(get_db)):
+    """Listar solicitudes de un usuario específico con datos relacionados"""
+    solicitudes = db.query(models.Solicitud)\
+        .join(models.User)\
+        .join(models.Categoria)\
+        .join(models.Edicion)\
+        .filter(models.Solicitud.user_id == user_id)\
+        .order_by(models.Solicitud.created_at.desc())\
+        .all()
+    
+    # Formatear la respuesta (SIN incluir descripción)
+    resultado = []
+    for solicitud in solicitudes:
+        resultado.append({
+            "id": solicitud.id,
+            "fecha_solicitud": solicitud.fecha_solicitud,
+            "estado": solicitud.estado,
+            "grado_academico": solicitud.grado_academico,
+            "periodo": solicitud.periodo,
+            "created_at": solicitud.created_at,
+            # Datos relacionados
+            "categoria": {
+                "codigo_categoria": solicitud.categoria.codigo_categoria,
+                "nombre": solicitud.categoria.nombre
+            },
+            "edicion": {
+                "nombre": solicitud.edicion.nombre
+            }
+            # Nota: NO incluimos descripción ni datos completos del usuario
+        })
+    
+    return resultado
