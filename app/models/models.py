@@ -2,6 +2,7 @@ from sqlalchemy import Boolean, Column, Integer, String, Text, Date, DateTime, F
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -102,3 +103,22 @@ class DatosFijos(Base):
     texto_ccp = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class ConstanciaGenerada(Base):
+    __tablename__ = "constancias_generadas"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    qr_id = Column(String(255), unique=True, index=True, nullable=False)
+    nombre = Column(String(255), nullable=False)
+    grado = Column(String(100))
+    pseudonimo = Column(String(10))
+    texto_asunto = Column(Text)
+    texto_consta = Column(Text)
+    fecha_emision = Column(String(100))
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    archivo_pdf = Column(String(500))
+    es_valida = Column(Boolean, default=True)
+    
+    def __repr__(self):
+        return f"<ConstanciaGenerada(qr_id='{self.qr_id}', nombre='{self.nombre}')>"
