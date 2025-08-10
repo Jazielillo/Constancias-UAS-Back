@@ -1,9 +1,8 @@
 # routes/constancias.py - Versión con IDs compatibles
-
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from sqlalchemy.orm import joinedload
 from fastapi import BackgroundTasks
 from pdf_generator import PDFGenerator
@@ -130,6 +129,10 @@ class ConstanciaRequest(BaseModel):
     texto_asunto: str
     texto_consta: str
     fecha_emision: str
+    
+    @validator('grado', 'nombre', pre=True)
+    def convert_to_uppercase(cls, v):
+        return v.upper() if v else v
 
 class ConstanciaResponse(BaseModel):
     id: str
@@ -162,7 +165,7 @@ async def generar_constancia_individual(constancia: ConstanciaRequest, db: Sessi
         
         # Generar nombre de archivo
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        archivo_pdf = f"{settings.CONSTANCIAS_DIR}/Constancia_{constancia.nombre}_{timestamp}.pdf"
+        archivo_pdf = f"{settings.CONSTANCIAS_DIR}/Constancia_{constancia.nombre.upper()}_{timestamp}.pdf"
         
         # Formatear la fecha de emisión
         fecha_formateada = formatear_fecha(constancia.fecha_emision)
@@ -184,8 +187,8 @@ async def generar_constancia_individual(constancia: ConstanciaRequest, db: Sessi
             texto_msgdigital=datos_fijos.texto_msgdigital,
             texto_ccp=datos_fijos.texto_ccp,
             pseudonimo=constancia.pseudonimo,
-            grado=constancia.grado,
-            nombre=constancia.nombre,
+            grado=constancia.grado.upper(),
+            nombre=constancia.nombre.upper(),
             texto_asunto=asunto_formateado,
             texto_consta=constancia.texto_consta,
             fecha_emision=fecha_formateada,
@@ -194,8 +197,8 @@ async def generar_constancia_individual(constancia: ConstanciaRequest, db: Sessi
         # Guardar la constancia en la base de datos
         nueva_constancia = ConstanciaGenerada(
             qr_id=idqrcode,
-            nombre=constancia.nombre,
-            grado=constancia.grado,
+            nombre=constancia.nombre.upper(),
+            grado=constancia.grado.upper(),
             pseudonimo=constancia.pseudonimo,
             texto_asunto=asunto_formateado,
             texto_consta=constancia.texto_consta,
@@ -210,7 +213,7 @@ async def generar_constancia_individual(constancia: ConstanciaRequest, db: Sessi
         
         return ConstanciaResponse(
             id=idqrcode,
-            nombre=constancia.nombre,
+            nombre=constancia.nombre.upper(),
             archivo_pdf=archivo_pdf,
             qr_code=f"{settings.QR_DIR}/{idqrcode}.png",
             url_validacion=f"{settings.VALIDATION_BASE_URL}{idqrcode}",
@@ -283,12 +286,12 @@ async def obtener_constancia_solicitud(
             pseudonimo = "el/la"
         
         # Usar el grado académico de la solicitud o del usuario
-        grado = solicitud.grado_academico or solicitud.usuario.grado_academico or ""
+        grado = (solicitud.grado_academico or solicitud.usuario.grado_academico or "").upper()
         
         # Guardar en BD antes de generar PDF
         nueva_constancia = ConstanciaGenerada(
             qr_id=idqrcode,
-            nombre=solicitud.usuario.nombre,
+            nombre=solicitud.usuario.nombre.upper(),
             grado=grado,
             pseudonimo=pseudonimo,
             texto_asunto=asunto_formateado,
@@ -317,7 +320,7 @@ async def obtener_constancia_solicitud(
             texto_ccp=datos_fijos.texto_ccp,
             pseudonimo=pseudonimo,
             grado=grado,
-            nombre=solicitud.usuario.nombre,
+            nombre=solicitud.usuario.nombre.upper(),
             texto_asunto=asunto_formateado,
             texto_consta=texto_consta,
             fecha_emision=fecha_formateada,
