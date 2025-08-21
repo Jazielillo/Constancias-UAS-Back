@@ -328,3 +328,50 @@ async def listar_solicitudes_usuario(user_id: int, db: Session = Depends(get_db)
     return resultado
 
 
+
+
+@router.put("/usuarios/{user_id}/grado-academico")
+async def actualizar_grado_academico(user_id: int, grado: str, db: Session = Depends(get_db)):
+    """Actualizar solo el grado académico del usuario"""
+    usuario = db.query(models.User).filter(models.User.id == user_id).first()
+    if usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Formatear el grado académico
+    usuario.grado_academico = formatear_grado_academico(grado)
+    
+    db.commit()
+    db.refresh(usuario)
+    
+    return {
+        "mensaje": "Grado académico actualizado exitosamente",
+        "grado_academico": usuario.grado_academico
+    }
+
+@router.put("/usuarios/{user_id}/datos-personales")
+async def actualizar_datos_personales(user_id: int, nombre: str, genero: str, db: Session = Depends(get_db)):
+    """Actualizar nombre completo y género del usuario"""
+    usuario = db.query(models.User).filter(models.User.id == user_id).first()
+    if usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Validar género
+    if genero not in ["Masculino", "Femenino"]:
+        raise HTTPException(status_code=400, detail="Género debe ser 'Masculino' o 'Femenino'")
+    
+    # Validar nombre
+    if not nombre or nombre.strip() == "":
+        raise HTTPException(status_code=400, detail="El nombre no puede estar vacío")
+    
+    # Actualizar datos
+    usuario.nombre = nombre.strip()
+    usuario.genero = genero
+    
+    db.commit()
+    db.refresh(usuario)
+    
+    return {
+        "mensaje": "Datos personales actualizados exitosamente",
+        "nombre": usuario.nombre,
+        "genero": usuario.genero
+    }

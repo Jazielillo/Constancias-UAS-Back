@@ -137,9 +137,10 @@ class PeriodoBase(BaseModel):
     fecha_inicio: date
     fecha_fin: date
     estado: str = "programado"
+    activa: bool = True
 
 class PeriodoCreate(PeriodoBase):
-    pass
+    estado: Optional[str] = None 
 
 class PeriodoUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -148,6 +149,7 @@ class PeriodoUpdate(BaseModel):
     fecha_inicio: Optional[date] = None
     fecha_fin: Optional[date] = None
     estado: Optional[str] = None
+    activa: Optional[bool] = None 
 
 class Periodo(PeriodoBase):
     id: int

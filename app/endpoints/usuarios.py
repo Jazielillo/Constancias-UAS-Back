@@ -66,3 +66,4 @@ async def eliminar_usuario(usuario_id: int, db: Session = Depends(get_db)):
     db.delete(db_usuario)
     db.commit()
     return {"mensaje": "Usuario eliminado exitosamente"}
+

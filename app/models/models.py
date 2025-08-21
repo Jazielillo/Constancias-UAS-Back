@@ -14,6 +14,7 @@ class User(Base):
     nombre = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     genero = Column(String(20), nullable=True, default=None)  # Nullable por defecto
+    tipo_empleado = Column(String(20), nullable=True, default=None)  # Nueva columna: Docente/Administrativo
     grado_academico = Column(String(100), nullable=True)
     admin = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -59,13 +60,13 @@ class Edicion(Base):
     periodo2 = Column(String(20), nullable=False)  
     fecha_inicio = Column(Date, nullable=False)
     fecha_fin = Column(Date, nullable=False)
-    estado = Column(String(20), default="programado")  
+    estado = Column(String(20), default="programado")
+    activa = Column(Boolean, nullable=False, default=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Agregar esta relación
     solicitudes = relationship("Solicitud", back_populates="edicion")
-    
 
 class Solicitud(Base):
     __tablename__ = "solicitudes"
