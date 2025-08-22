@@ -448,3 +448,33 @@ async def eliminar_constancia(qr_id: str, db: Session = Depends(get_db)):
         os.remove(constancia.archivo_pdf)
     
     return {"mensaje": "Constancia eliminada exitosamente"}
+
+
+@router.get("/validar/{qr_id}")
+async def validar_constancia(qr_id: str, db: Session = Depends(get_db)):
+    """Validar constancia por ID del QR - Si existe en la tabla, es válida"""
+    
+    # Buscar en la base de datos - Si existe el registro, es válida
+    constancia = db.query(ConstanciaGenerada).filter(
+        ConstanciaGenerada.qr_id == qr_id
+    ).first()
+    
+    if constancia:
+        return {
+            "valida": True,
+            "id": qr_id,
+            "nombre": constancia.nombre,
+            "grado": constancia.grado,
+            "pseudonimo": constancia.pseudonimo,
+            "texto_asunto": constancia.texto_asunto,
+            "texto_consta": constancia.texto_consta,
+            "fecha_emision": constancia.fecha_emision,
+            "fecha_creacion": constancia.fecha_creacion.strftime("%d/%m/%Y %H:%M:%S") if constancia.fecha_creacion else "",
+            "url_validacion": f"{settings.VALIDATION_BASE_URL}{qr_id}"
+        }
+    else:
+        return {
+            "valida": False,
+            "id": qr_id,
+            "mensaje": "Constancia no encontrada o código inválido"
+        }

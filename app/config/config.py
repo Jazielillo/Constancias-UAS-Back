@@ -28,7 +28,7 @@ class Settings:
     DIRECTOR_TITLE = "DIRECTOR"
     
     # URL base para validación
-    VALIDATION_BASE_URL = "https://fim.uas.edu.mx/constancias/validacion.php?code="
+    VALIDATION_BASE_URL = "http://localhost:8080/validacion/"
     
     # Configuración de constancias
     COMMISSION_TEXT = """COMISIÓN DE EVALUACIÓN DEL PROGRAMA DE ESTÍMULOS<br />
